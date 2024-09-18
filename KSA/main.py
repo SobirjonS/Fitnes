@@ -2,15 +2,14 @@ import requests
 import json
 import pandas as pd
 from datetime import datetime, timedelta
-from celery_config import app
 
   
 def get_trial_sessions(date, calendar_id):
     url = f'https://acuityscheduling.com/api/v1/appointments'
     
     headers = {
-        "accept": "application/json",
-        "authorization": "Basic MTc2Njk0OTk6YWFiYTdhMjlkMzNhOGJhN2NiMjc1MGY2YmNkZjFkNGU="
+    "accept": "application/json",
+    "authorization": "Basic MTc2Njk0OTk6YWFiYTdhMjlkMzNhOGJhN2NiMjc1MGY2YmNkZjFkNGU="
     }
     
     params = {
@@ -37,41 +36,34 @@ def text_to_excel(data):
         'canceled_sessions': 'Trials Cancelled/No Show'
     })
 
-    print(summary)
 
     yesterday = datetime.now() - timedelta(days=1)
     yesterday_str = yesterday.strftime('%Y-%m-%d')
 
     calendar_name = df['calendar'].iloc[0].replace(" ", "_")
 
-    file_name = f"files/{calendar_name}_{yesterday_str}.xlsx"
+    file_name = f"KSA/files/{calendar_name}_{yesterday_str}.xlsx"
 
     summary.to_excel(file_name, index=False)
 
-    print(f"Файл успешно создан: {file_name}")
     
-    
-@app.task
-def get_data():
-    url = "https://acuityscheduling.com/api/v1/calendars"
 
-    headers = {
-        "accept": "application/json",
-        "authorization": "Basic MTc2Njk0OTk6YWFiYTdhMjlkMzNhOGJhN2NiMjc1MGY2YmNkZjFkNGU="
-    }
+yesterday = (datetime.now() - timedelta(1)).strftime('%Y-%m-%d')
 
-    response = requests.get(url, headers=headers)
+url = "https://acuityscheduling.com/api/v1/calendars"
+headers = {
+    "accept": "application/json",
+    "authorization": "Basic MTc2Njk0OTk6YWFiYTdhMjlkMzNhOGJhN2NiMjc1MGY2YmNkZjFkNGU="
+}
 
-    data = response.content
+response = requests.get(url, headers=headers)
+data = response.content
+decoded_data = data.decode('utf-8')
+parsed_data = json.loads(decoded_data)
 
+for entry in parsed_data:
+    data = get_trial_sessions(yesterday, calendar_id=entry['id'])
     decoded_data = data.decode('utf-8')
-
     parsed_data = json.loads(decoded_data)
-
-    date = '2023-05-09'
-    for entry in parsed_data:
-        data = get_trial_sessions(date, calendar_id=entry['id'])
-        decoded_data = data.decode('utf-8')
-        parsed_data = json.loads(decoded_data)
-        if parsed_data:
-            text_to_excel(data=parsed_data)
+    if parsed_data:
+        text_to_excel(data=parsed_data)
