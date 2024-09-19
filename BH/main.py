@@ -68,7 +68,7 @@ def save_to_excel(data):
         'canceled_sessions': 'Trials Cancelled/No Show'
     })
 
-    file_name = f"BH/files/BH_{yesterday}.xlsx"
+    file_name = f"BH/files/BH Trials Report {yesterday}.xlsx"
     summary.to_excel(file_name, index=False)
 
 # Основной процесс
