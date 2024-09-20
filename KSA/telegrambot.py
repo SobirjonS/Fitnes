@@ -2,11 +2,13 @@ import os
 import asyncio
 from telegram import Bot
 from telegram.error import TelegramError
+from datetime import datetime, timedelta
 
+yesterday = (datetime.now() - timedelta(1)).strftime('%Y-%m-%d')
 
 TELEGRAM_TOKEN = '7338375924:AAFHdwHEdtVXK70HJw2lfbMPi8lm7OrMHG0'
 CHAT_ID = '-1002217060475'
-FILES_DIR = 'KSA/files/'
+FILES_DIR = f"/Fitnes/KW/files/KW Trials Report {yesterday}.xlsx"
 
 async def send_file(file_path):
     bot = Bot(token=TELEGRAM_TOKEN)
