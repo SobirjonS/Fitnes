@@ -7,12 +7,17 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# Получаем вчерашнюю дату
 yesterday = (datetime.now() - timedelta(1)).strftime('%Y-%m-%d')
 
+# Переменные окружения
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 CHAT_ID = os.getenv("CHAT_ID")
-FILES_DIR = f"/Fitnes/BH/files/BH Trials Report {yesterday}.xlsx"
 
+# Путь к конкретному файлу
+FILE_PATH = f"/Fitnes/BH/files/BH Trials Report {yesterday}.xlsx"
+
+# Функция для отправки файла
 async def send_file(file_path):
     bot = Bot(token=TELEGRAM_TOKEN)
     try:
@@ -22,17 +27,14 @@ async def send_file(file_path):
     except TelegramError as e:
         print(f"Ошибка при отправке файла {file_path}: {e}")
 
-async def send_files_in_directory(directory):
-    tasks = []
-    for filename in os.listdir(directory):
-        file_path = os.path.join(directory, filename)
-        if os.path.isfile(file_path):
-            tasks.append(send_file(file_path))
-    
-    await asyncio.gather(*tasks)
-
+# Главная функция
 async def main():
-    await send_files_in_directory(FILES_DIR)
+    # Проверяем, существует ли файл
+    if os.path.isfile(FILE_PATH):
+        await send_file(FILE_PATH)
+    else:
+        print(f"Файл {FILE_PATH} не найден!")
 
+# Запуск программы
 if __name__ == "__main__":
     asyncio.run(main())
