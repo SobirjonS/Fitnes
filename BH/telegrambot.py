@@ -12,7 +12,7 @@ yesterday = (datetime.now() - timedelta(1)).strftime('%Y-%m-%d')
 
 # Переменные окружения
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
-CHAT_ID = os.getenv("CHAT_ID")
+CHAT_ID = os.getenv("CHAT_ID_BH")
 
 # Путь к конкретному файлу
 FILE_PATH = f"/Fitnes/BH/files/BH Trials Report {yesterday}.xlsx"
