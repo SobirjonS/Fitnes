@@ -19,11 +19,18 @@ def get_trial_sessions(date, calendar_id):
         'calendarID': calendar_id
     }
     response = requests.get(url, headers=headers, params=params)
-    return json.loads(response.content.decode('utf-8'))
+    sessions = json.loads(response.content.decode('utf-8'))
+    
+    trial_sessions = [session for session in sessions if 'Trial Session' in session.get('type') or 'trial session' in session.get('type')]
+    
+    return trial_sessions
+
 
 def collect_all_sessions():
     global yesterday
+
     url = "https://acuityscheduling.com/api/v1/calendars"
+
     headers = {
         "accept": "application/json",
         "authorization": "Basic MTc2Njk0OTk6YWFiYTdhMjlkMzNhOGJhN2NiMjc1MGY2YmNkZjFkNGU="
@@ -32,14 +39,18 @@ def collect_all_sessions():
     response = requests.get(url, headers=headers)
     calendars = json.loads(response.content.decode('utf-8'))
 
-    all_data = []  # Здесь будут собраны данные всех тренеров
+    all_data = []
 
     for entry in calendars:
         sessions = get_trial_sessions(yesterday, calendar_id=entry['id'])
-        if not sessions:  # Если сессий нет, добавляем нулевые значения
+        
+        if not sessions:  # Если сессий нет, добавляем имя тренера и нулевые значения
             all_data.append({
                 'calendar': entry['name'],
-                'canceled': None  # Добавляем столбец canceled как None или False
+                'total_sessions': 0,
+                'completed_sessions': 0,
+                'canceled_sessions': 0,
+                'canceled': None
             })
         else:
             for session in sessions:
@@ -47,13 +58,13 @@ def collect_all_sessions():
 
     return all_data
 
+
 def save_to_excel(data):
     global yesterday
 
     df = pd.DataFrame(data)
 
-    # Заполняем NaN значениями для столбца 'canceled', если нет данных
-    df['canceled'] = df['canceled'].fillna(True)  # Можно задать False, если это необходимо
+    df['canceled'] = df['canceled'].fillna(True)
 
     summary = df.groupby('calendar').agg(
         total_sessions=('calendar', 'count'),
@@ -68,10 +79,9 @@ def save_to_excel(data):
         'canceled_sessions': 'Trials Cancelled/No Show'
     })
 
-    file_name = f"/Fitnes/KW/files/KW Trials Report {yesterday}.xlsx"
+    file_name = f"KW/files/KW Trials Report {yesterday}.xlsx"
     summary.to_excel(file_name, index=False)
 
-# Основной процесс
 all_sessions = collect_all_sessions()
 if all_sessions:
     save_to_excel(all_sessions)

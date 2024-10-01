@@ -15,7 +15,7 @@ TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 CHAT_ID = os.getenv("CHAT_ID_KW")
 
 # Путь к конкретному файлу
-FILE_PATH = f"/Fitnes/KW/files/KW Trials Report {yesterday}.xlsx"
+FILE_PATH = f"KW/files/KW Trials Report {yesterday}.xlsx"
 
 # Функция для отправки файла
 async def send_file(file_path):

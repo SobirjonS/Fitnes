@@ -16,7 +16,7 @@ CHAT_ID_KSA = os.getenv("CHAT_ID_KSA")
 CHAT_ID_KSA2 = os.getenv("CHAT_ID_KSA2")
 
 # Путь к конкретному файлу
-FILE_PATH = f"/Fitnes/KSA/files/KSA Trials Report {yesterday}.xlsx"
+FILE_PATH = f"KSA/files/KSA Trials Report {yesterday}.xlsx"
 
 # Функция для отправки файла
 async def send_file_1(file_path):

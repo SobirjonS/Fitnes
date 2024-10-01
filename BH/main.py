@@ -19,7 +19,8 @@ def get_trial_sessions(date, calendar_id):
         'calendarID': calendar_id
     }
     response = requests.get(url, headers=headers, params=params)
-    return json.loads(response.content.decode('utf-8'))
+    res = json.loads(response.content.decode('utf-8'))
+    return res
 
 def collect_all_sessions():
     global yesterday
@@ -28,9 +29,11 @@ def collect_all_sessions():
         "accept": "application/json",
         "authorization": "Basic MTY4Mjg1OTE6Yjk2MzE0YTA4NTQ0NDIzYjdkMjFjYWQ1NzYzZTg4MGI="
     }
-
+ 
     response = requests.get(url, headers=headers)
     calendars = json.loads(response.content.decode('utf-8'))
+    
+
 
     all_data = []  # Здесь будут собраны данные всех тренеров
 
@@ -68,7 +71,7 @@ def save_to_excel(data):
         'canceled_sessions': 'Trials Cancelled/No Show'
     })
 
-    file_name = f"/Fitnes/BH/files/BH Trials Report {yesterday}.xlsx"
+    file_name = f"BH/files/BH Trials Report {yesterday}.xlsx"
     summary.to_excel(file_name, index=False)
 
 # Основной процесс
