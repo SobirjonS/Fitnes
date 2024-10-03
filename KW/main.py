@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 yesterday = (datetime.now() - timedelta(1)).strftime('%Y-%m-%d')
 
 def get_trial_sessions(date, calendar_id):
-    url = f'https://acuityscheduling.com/api/v1/appointments'
+    url = 'https://acuityscheduling.com/api/v1/appointments'
     
     headers = {
         "accept": "application/json",
@@ -18,13 +18,13 @@ def get_trial_sessions(date, calendar_id):
         'maxDate': date,
         'calendarID': calendar_id
     }
-    response = requests.get(url, headers=headers, params=params)
-    sessions = json.loads(response.content.decode('utf-8'))
     
-    trial_sessions = [session for session in sessions if 'Trial Session' in session.get('type') or 'trial session' in session.get('type')]
+    response = requests.get(url, headers=headers, params=params)
+    appointments = json.loads(response.content.decode('utf-8'))
+    
+    trial_sessions = [session for session in appointments if 'trial session' in session.get('category').lower()]
     
     return trial_sessions
-
 
 def collect_all_sessions():
     global yesterday
@@ -35,53 +35,71 @@ def collect_all_sessions():
         "accept": "application/json",
         "authorization": "Basic MTc2Njk0OTk6YWFiYTdhMjlkMzNhOGJhN2NiMjc1MGY2YmNkZjFkNGU="
     }
-
+ 
     response = requests.get(url, headers=headers)
-    calendars = json.loads(response.content.decode('utf-8'))
+    calendars = json.loads(response.content.decode('utf-8'))  
 
     all_data = []
 
     for entry in calendars:
         sessions = get_trial_sessions(yesterday, calendar_id=entry['id'])
-        
-        if not sessions:  # Если сессий нет, добавляем имя тренера и нулевые значения
+        if not sessions:
             all_data.append({
                 'calendar': entry['name'],
-                'total_sessions': 0,
-                'completed_sessions': 0,
-                'canceled_sessions': 0,
-                'canceled': None
             })
         else:
             for session in sessions:
                 all_data.append(session)
-
+    
     return all_data
-
 
 def save_to_excel(data):
     global yesterday
 
-    df = pd.DataFrame(data)
+    # Создание списка для сбора данных по каждому тренеру
+    processed_data = []
 
-    df['canceled'] = df['canceled'].fillna(True)
+    # Проходим по каждому элементу в данных
+    for item in data:
+        if 'id' in item:  # Если есть id, значит это сессия
+            canceled = item.get('canceled', False)
+            processed_data.append({
+                'Coach Name': item['calendar'],  # Имя тренера
+                'Trials Scheduled Till Today': 1,  # Сессия засчитывается
+                'Completed Trials Till Today': 0 if canceled else 1,  # Если не отменена, то завершена
+                'Trials Cancelled/No Show': 1 if canceled else 0  # Если отменена
+            })
+        else:  # Если только имя тренера без сессий
+            processed_data.append({
+                'Coach Name': item['calendar'],
+                'Trials Scheduled Till Today': 0,
+                'Completed Trials Till Today': 0,
+                'Trials Cancelled/No Show': 0
+            })
 
-    summary = df.groupby('calendar').agg(
-        total_sessions=('calendar', 'count'),
-        completed_sessions=('canceled', lambda x: (x == False).sum()),
-        canceled_sessions=('canceled', lambda x: x.sum())
+    # Преобразуем в DataFrame
+    df = pd.DataFrame(processed_data)
+
+    # Группируем данные по тренерам и суммируем значения
+    summary = df.groupby('Coach Name').agg(
+        Trials_Scheduled_Till_Today=('Trials Scheduled Till Today', 'sum'),
+        Completed_Trials_Till_Today=('Completed Trials Till Today', 'sum'),
+        Trials_Cancelled_No_Show=('Trials Cancelled/No Show', 'sum')
     ).reset_index()
 
+    # Переименовываем столбцы
     summary = summary.rename(columns={
-        'calendar': 'Coach Name',
-        'total_sessions': 'Trials Scheduled Till Today',
-        'completed_sessions': 'Completed Trials Till Today',
-        'canceled_sessions': 'Trials Cancelled/No Show'
+        'Coach Name': 'Coach Name',
+        'Trials_Scheduled_Till_Today': 'Trials Scheduled Till Today',
+        'Completed_Trials_Till_Today': 'Completed Trials Till Today',
+        'Trials_Cancelled_No_Show': 'Trials Cancelled/No Show'
     })
 
-    file_name = f"KW/files/KW Trials Report {yesterday}.xlsx"
+    # Сохранение в Excel
+    file_name = f"/Fitnes/KW/files/KW Trials Report {yesterday}.xlsx"
     summary.to_excel(file_name, index=False)
 
+# # Основной процесс
 all_sessions = collect_all_sessions()
 if all_sessions:
     save_to_excel(all_sessions)
