@@ -4,8 +4,9 @@ import pandas as pd
 from datetime import datetime, timedelta
 
 yesterday = (datetime.now() - timedelta(1)).strftime('%Y-%m-%d')
+first_day_of_month = datetime.now().replace(day=1).strftime('%Y-%m-%d')
 
-def get_trial_sessions(date, calendar_id):
+def get_trial_sessions(first_day_of_month, yesterday, calendar_id):
     url = 'https://acuityscheduling.com/api/v1/appointments'
     
     headers = {
@@ -14,8 +15,8 @@ def get_trial_sessions(date, calendar_id):
     }
     
     params = {
-        'minDate': date,
-        'maxDate': date,
+        'minDate': first_day_of_month,
+        'maxDate': yesterday,
         'calendarID': calendar_id
     }
     
@@ -27,7 +28,7 @@ def get_trial_sessions(date, calendar_id):
     return trial_sessions
 
 def collect_all_sessions():
-    global yesterday
+    global first_day_of_month, yesterday
 
     url = "https://acuityscheduling.com/api/v1/calendars"
 
@@ -42,7 +43,7 @@ def collect_all_sessions():
     all_data = []
 
     for entry in calendars:
-        sessions = get_trial_sessions(yesterday, calendar_id=entry['id'])
+        sessions = get_trial_sessions(first_day_of_month, yesterday, calendar_id=entry['id'])
         if not sessions:
             all_data.append({
                 'calendar': entry['name'],
