@@ -7,7 +7,7 @@ yesterday = (datetime.now() - timedelta(1)).strftime('%Y-%m-%d')
 first_day_of_month = datetime.now().replace(day=1).strftime('%Y-%m-%d')
 
 def get_trial_sessions(first_day_of_month, yesterday, calendar_id):
-    url = 'https://acuityscheduling.com/api/v1/appointments'
+    url = 'https://acuityscheduling.com/api/v1/appointments?showall=true'
     
     headers = {
         "accept": "application/json",
@@ -97,7 +97,7 @@ def save_to_excel(data):
     })
 
     # Сохранение в Excel
-    file_name = f"/Fitnes/KSA/files/KSA Trials Report {yesterday}.xlsx"
+    file_name = f"KSA/files/KSA Trials Report {yesterday}.xlsx"
     summary.to_excel(file_name, index=False)
 
 # # Основной процесс
